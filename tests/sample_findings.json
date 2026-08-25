@@ -1,0 +1,212 @@
+[
+  {
+    "file": "app/positives/p_log.py",
+    "line": 10,
+    "severity": "CRITICAL"
+  },
+  {
+    "file": "app/positives/p_sql.py",
+    "line": 6,
+    "severity": null
+  },
+  {
+    "file": "app/positives/p_http.py",
+    "line": 8,
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/positives/p_llm.py",
+    "line": 8,
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/positives/p_3p.py",
+    "line": 8,
+    "severity": "CRITICAL"
+  },
+  {
+    "file": "app/positives/p_file.py",
+    "line": 8,
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/positives/p_url.py",
+    "line": 8,
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/positives/p_cache.py",
+    "line": 7,
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/positives/p_email.py",
+    "line": 7,
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/js/p_store.js",
+    "line": 5,
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/java/com/svorah/testrepo/PLog.java",
+    "line": 6,
+    "severity": "CRITICAL"
+  },
+  {
+    "file": "app/crosschecks/x_sev.py",
+    "line": 11,
+    "severity": "CRITICAL"
+  },
+  {
+    "file": "app/crosschecks/x_sev.py",
+    "line": 12,
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/crosschecks/x_sev.py",
+    "line": 13,
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/crosschecks/x_alias.py",
+    "line": 8,
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/crosschecks/x_namegate.py",
+    "line": 9,
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/fn/interproc_c.py",
+    "line": 8,
+    "severity": "CRITICAL"
+  },
+  {
+    "file": "app/fn/fn_transforms.py",
+    "line": 11,
+    "severity": "CRITICAL"
+  },
+  {
+    "file": "app/fn/fn_transforms.py",
+    "line": 15,
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/fn/fn_transforms.py",
+    "line": 19,
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/fn/fn_naming.py",
+    "line": 10,
+    "severity": "CRITICAL"
+  },
+  {
+    "file": "app/fn/fn_naming.py",
+    "line": 11,
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/fn/fn_naming.py",
+    "line": 12,
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/fn/fn_subscript.py",
+    "line": 10,
+    "severity": "CRITICAL"
+  },
+  {
+    "file": "app/fn/fn_subscript.py",
+    "line": 11,
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/fn/fn_alias_chain.py",
+    "line": 12,
+    "severity": "CRITICAL"
+  },
+  {
+    "file": "app/fn/fn_container.py",
+    "line": 10,
+    "severity": "CRITICAL"
+  },
+  {
+    "file": "app/fn/fn_logger_chain.py",
+    "line": 10,
+    "severity": "CRITICAL"
+  },
+  {
+    "file": "app/fn/fn_logger_chain.py",
+    "line": 14,
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/fn/fn_indian_ids.py",
+    "line": 10,
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/fn/fn_indian_ids.py",
+    "line": 11,
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/fn/fn_indian_ids.py",
+    "line": 12,
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/fn/fn_indian_ids.py",
+    "line": 13,
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/fn/fn_nondominating_consent.py",
+    "line": 12,
+    "severity": "CRITICAL"
+  },
+  {
+    "file": "app/fn/fn_nondominating_consent.py",
+    "line": 16,
+    "severity": "CRITICAL"
+  },
+  {
+    "file": "app/fn/fn_partial_sanitisation.py",
+    "line": 9,
+    "severity": "CRITICAL"
+  },
+  {
+    "file": "app/fn/fn_name_mismatch.py",
+    "line": 10,
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/ordering/ord_before_after.py",
+    "line": 16,
+    "severity": "HIGH"
+  },
+  {
+    "file": "app/ordering/ord_two_sinks.py",
+    "line": 11,
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/ordering/ord_two_sinks.py",
+    "line": 11,
+    "severity": "MEDIUM"
+  },
+  {
+    "file": "app/ordering/ord_dedup.py",
+    "line": 13,
+    "severity": "CRITICAL"
+  },
+  {
+    "file": "app/ordering/ord_pos_neg_same_fn.py",
+    "line": 11,
+    "severity": "HIGH"
+  }
+]

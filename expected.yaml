@@ -1,0 +1,275 @@
+# Machine-readable answer key for the SVORAH taint-engine corpus.
+# The benchmark runner diffs scanner output against this.
+# A positive passes when a finding exists at file:line with the given control + severity.
+# A negative passes when NO finding exists for it.
+
+positives:
+  - id: P-LOG
+    rule: pii-in-log
+    control: DPDP-002
+    file: app/positives/p_log.py
+    line: 10
+    pii: aadhaar
+    severity: CRITICAL
+  - id: P-SQL
+    rule: sqli
+    control: DPDP-032
+    file: app/positives/p_sql.py
+    line: 6
+    pii: null
+    severity: null      # SQLi severity not set by PII harm tier
+  - id: P-HTTP
+    rule: pii-external-api
+    control: DPDP-028
+    file: app/positives/p_http.py
+    line: 8
+    pii: email
+    severity: MEDIUM
+  - id: P-LLM
+    rule: pii-to-llm
+    control: DPDP-028
+    file: app/positives/p_llm.py
+    line: 8
+    pii: email
+    severity: MEDIUM
+  - id: P-3P
+    rule: pii-to-third-party
+    control: DPDP-028
+    file: app/positives/p_3p.py
+    line: 8
+    pii: aadhaar
+    severity: CRITICAL
+  - id: P-FILE
+    rule: pii-to-file
+    control: DPDP-006
+    file: app/positives/p_file.py
+    line: 8
+    pii: pan
+    severity: HIGH
+  - id: P-URL
+    rule: pii-in-url
+    control: DPDP-004
+    file: app/positives/p_url.py
+    line: 8
+    pii: phone
+    severity: MEDIUM
+  - id: P-CACHE
+    rule: pii-in-cache
+    control: DPDP-027
+    file: app/positives/p_cache.py
+    line: 7
+    pii: email
+    severity: MEDIUM
+  - id: P-EMAIL
+    rule: pii-in-email
+    control: DPDP-029
+    file: app/positives/p_email.py
+    line: 7
+    pii: pan
+    severity: HIGH
+  - id: P-STORE
+    rule: pii-in-storage
+    control: DPDP-025
+    file: app/js/p_store.js
+    line: 5
+    pii: email
+    severity: MEDIUM
+  - id: P-JAVA
+    rule: pii-in-log
+    control: DPDP-002
+    file: app/java/com/svorah/testrepo/PLog.java
+    line: 6
+    pii: aadhaar
+    severity: CRITICAL
+
+negatives:            # each must yield ZERO findings
+  - id: N-VERB
+    mechanism: sanitiser-verb
+    file: app/negatives/n_verb.py
+    pairs: P-LOG
+  - id: N-CRYPTO
+    mechanism: sanitiser-crypto-lib
+    files: [app/negatives/n_crypto.py, app/java/com/svorah/testrepo/NCrypto.java]
+    pairs: [P-LOG, P-JAVA]
+  - id: N-CUSTOM
+    mechanism: sanitiser-custom-yml
+    file: app/negatives/n_custom.py
+    line: 11
+    pairs: P-FILE
+    note: zero ONLY while custom_sanitisers:[to_stars] is configured
+  - id: N-CONSENT
+    mechanism: consent-gate-dominance
+    file: app/negatives/n_consent.py
+    pairs: P-3P
+  - id: N-SQLCAST
+    mechanism: sql-barrier-int-cast
+    file: app/negatives/n_sqlcast.py
+    pairs: P-SQL
+  - id: N-NOTPII
+    mechanism: not-personal-data
+    file: app/negatives/n_notpii.py
+    pairs: P-CACHE
+  - id: N-RECIP
+    mechanism: email-recipient-excluded
+    file: app/negatives/n_recip.py
+    pairs: P-EMAIL
+  - id: N-EXCLUDED
+    mechanism: path-exclusion
+    file: tests/n_excluded.py
+    requires_config: excluded_paths   # only zero AFTER .svorah.yml is applied; the raw
+                                      # taint engine WOULD find this. The benchmark must run
+                                      # the engine with .svorah.yml, or this looks like a fail.
+    note: real PII->log flow, suppressed by excluded_paths:["tests/**"]
+
+crosschecks:
+  - id: X-SEV
+    proves: severity is set by PII harm tier, not by the rule
+    file: app/crosschecks/x_sev.py
+    expect:
+      - {line: 11, pii: aadhaar, severity: CRITICAL}
+      - {line: 12, pii: pan, severity: HIGH}
+      - {line: 13, pii: email, severity: MEDIUM}
+  - id: X-XBORDER
+    proves: code agent labels cross-border SUSPECTED (recipient named), never confirmed
+    status: target   # TARGET (not scored): PII->recipient flow is detectable today, but the
+                     # cross_border labels + data_residency resolution are not built yet.
+    file: app/crosschecks/x_xborder.py
+    expect:
+      - {line: 17, recipient: openai, cross_border: suspected, pii: email, severity: MEDIUM}
+      - {line: 21, recipient: stripe, cross_border: resolved_domestic, resolved_by: ".svorah.yml data_residency stripe=IN", pii: pan, severity: HIGH}
+      - {line: 25, recipient: razorpay, cross_border: not_suspected, pii: pan, severity: HIGH}
+      - {line: 29, recipient: unknown, cross_border: not_asserted, pii: email, severity: MEDIUM}
+  - id: X-L3TOGGLE
+    proves: layer-3 custom sanitisers are real
+    file: app/negatives/n_custom.py
+    line: 11
+    expect:
+      with_config: 0            # custom_sanitisers:[to_stars] present
+      without_config:           # remove to_stars from .svorah.yml, re-run
+        {pii: pan, severity: HIGH, control: DPDP-006}
+  - id: X-ALIAS
+    proves: sinks are receiver-constrained
+    file: app/crosschecks/x_alias.py
+    expect:
+      - {line: 8, receiver: cache, fires: true, pii: email, severity: MEDIUM}
+      - {line: 9, receiver: r, fires: false}
+  - id: X-NAMEGATE
+    proves: sources are person-noun gated
+    file: app/crosschecks/x_namegate.py
+    expect:
+      - {line: 9, receiver: user, fires: true, pii: name, severity: MEDIUM}
+      - {line: 10, receiver: product, fires: false}
+
+# ---- FN-resistance: real violations the engine must still catch ----
+fn_resistance:
+  - id: FN-INTERPROC
+    proves: cross-file interprocedural flow (3 files)
+    flow: app/fn/interproc_a.py -> app/fn/interproc_b.py -> app/fn/interproc_c.py
+    sink: {file: app/fn/interproc_c.py, line: 8}
+    pii: aadhaar
+    severity: CRITICAL
+    expect_count: 1
+  - id: FN-TRANSFORMS
+    proves: non-sanitising wrappers do not launder PII
+    file: app/fn/fn_transforms.py
+    expect:
+      - {line: 11, transform: "str()", pii: aadhaar, severity: CRITICAL}
+      - {line: 15, transform: "f-string", pii: pan, severity: HIGH}
+      - {line: 19, transform: ".strip()", pii: email, severity: MEDIUM}
+  - id: FN-NAMING
+    proves: camelCase/snake/suffix variants match
+    file: app/fn/fn_naming.py
+    expect:
+      - {line: 10, pii: aadhaarNumber, severity: CRITICAL}
+      - {line: 11, pii: emailAddress, severity: MEDIUM}
+      - {line: 12, pii: user_phone, severity: MEDIUM}
+  - id: FN-SUBSCRIPT
+    proves: subscript access is a source
+    file: app/fn/fn_subscript.py
+    expect:
+      - {line: 10, pii: aadhaar, severity: CRITICAL}
+      - {line: 11, pii: email, severity: MEDIUM}
+  - id: FN-ALIAS
+    proves: taint survives an assignment chain
+    file: app/fn/fn_alias_chain.py
+    expect: [{line: 12, pii: aadhaar, severity: CRITICAL}]
+  - id: FN-CONTAINER
+    proves: PII inside a dict/list still reaches the sink
+    file: app/fn/fn_container.py
+    expect: [{line: 10, pii: aadhaar, severity: CRITICAL}]
+  - id: FN-LOGGERCHAIN
+    proves: getter-chain loggers are sinks
+    file: app/fn/fn_logger_chain.py
+    expect:
+      - {line: 10, logger: "logging.getLogger().info", pii: aadhaar, severity: CRITICAL}
+      - {line: 14, logger: "structlog.get_logger().info", pii: pan, severity: HIGH}
+  - id: FN-INDIANIDS
+    proves: India-first identifiers fire with severity
+    file: app/fn/fn_indian_ids.py
+    expect:
+      - {line: 10, pii: upi, severity: HIGH}
+      - {line: 11, pii: ifsc, severity: MEDIUM}   # DECIDED: IFSC alone is a public bank-branch code (not an account number) -> MEDIUM
+      - {line: 12, pii: voterId, severity: HIGH}
+      - {line: 13, pii: pan, severity: HIGH}
+  - id: FN-NONDOM-CONSENT
+    proves: a consent check that does not dominate the sink does not clear it
+    file: app/fn/fn_nondominating_consent.py
+    expect:
+      - {line: 12, case: consent-in-other-branch, pii: aadhaar, severity: CRITICAL}
+      - {line: 16, case: consent-after-sink, pii: aadhaar, severity: CRITICAL}
+  - id: FN-PARTIAL
+    proves: sanitising one arg does not clear a different tainted arg
+    file: app/fn/fn_partial_sanitisation.py
+    expect: [{line: 9, arg: body, pii: aadhaar, severity: CRITICAL}]
+  - id: FN-NAMEMISMATCH
+    proves: a custom-sanitiser name that is not configured does not clear taint
+    file: app/fn/fn_name_mismatch.py
+    expect: [{line: 10, pii: pan, severity: HIGH}]
+  - id: FN-KEYWORDARG
+    proves: PII in a keyword arg fires
+    covered_by: P-HTTP   # requests.post(url, json={"email": user.email})
+  - id: FN-JAVAGETTER
+    proves: Java getter source fires
+    covered_by: P-JAVA   # System.out.println(user.getAadhaar())
+
+# ---- FP-resistance: look-alikes that must yield ZERO findings ----
+fp_resistance:
+  - {id: FP-RECEIVER, file: app/fp/fp_receiver_gate.py, note: "config.ipAddress / table.name / challenge.name / _tmp_56.name"}
+  - {id: FP-TOKENS, file: app/fp/fp_token_traps.py, note: "expand()/dobson.value substring; email_regex/email_template_id/nameField field-name-not-value"}
+  - {id: FP-SINKLOOKALIKE, file: app/fp/fp_sink_lookalikes.py, note: "catalog/dialog/backlog 'log' substrings; doc/res/pdf non-DB; bare .write"}
+  - {id: FP-COMPOUND, file: app/fp/fp_compound_assign.py, note: "res.render loginError; mongo $set; openai.api_key/stripe.apiKey assignment"}
+  - {id: FP-RECIPIENT, file: app/fp/fp_recipient.py, note: "send_mail(to=..., subject=...) recipient-only"}
+  - {id: FP-READ, file: app/js/fp_read.js, note: "localStorage.getItem is a read, not a sink"}
+
+# ---- Ordering / boundary ----
+ordering:
+  - id: ORD-BEFOREAFTER
+    file: app/ordering/ord_before_after.py
+    expect:
+      - {func: sanitise_before, fires: false}
+      - {func: sanitise_after, line: 16, fires: true, pii: pan, severity: HIGH}
+  - id: ORD-TWOSINKS
+    file: app/ordering/ord_two_sinks.py
+    expect:
+      - {line: 11, sink: log, control: DPDP-002, pii: email, severity: MEDIUM}
+      - {line: 11, sink: cache, control: DPDP-027, pii: email, severity: MEDIUM}
+    expect_count: 2
+  - id: ORD-DEDUP
+    file: app/ordering/ord_dedup.py
+    expect: [{line: 13, pii: aadhaar, severity: CRITICAL}]
+    expect_count: 1
+  - id: ORD-POSNEG
+    file: app/ordering/ord_pos_neg_same_fn.py
+    expect: [{line: 11, pii: pan, severity: HIGH}]
+    expect_count: 1
+
+# ---- Cross-border: SUSPECTED only; verdict deferred to cloud scan / declaration / DPO ----
+# Principle: the code agent detects data MOVEMENT + RECIPIENT (+ a literal region hint when
+# one is in source). It never asserts confirmed residency (that's infra/law, not code).
+# cross_border values: suspected | not_suspected | resolved_domestic | not_asserted
+cross_border_region_hints:
+  status: target   # TARGET (not scored): literal region-hint extraction is not built yet.
+  file: app/crosschecks/x_region_hint.py
+  expect:
+    - {line: 11, recipient: aws-s3, region_hint: us-east-1, cross_border: suspected, pii: aadhaar, severity: CRITICAL}
+    - {line: 16, recipient: aws-s3, region_hint: ap-south-1, cross_border: not_suspected, pii: aadhaar, severity: CRITICAL}

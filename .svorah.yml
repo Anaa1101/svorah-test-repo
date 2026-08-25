@@ -1,0 +1,12 @@
+# SVORAH scan config for the taint-engine test corpus.
+# Exercised by N-CUSTOM (custom_sanitisers) and N-EXCLUDED (excluded_paths).
+custom_sanitisers:
+  - to_stars
+excluded_paths:
+  - "tests/**"
+
+# Client declaration of where named processors actually run. Lets the code agent
+# resolve a "suspected" cross-border flow to domestic WITHOUT cloud credentials.
+# (The cloud scan or the DPO can also confirm/clear it.) Exercised by X-XBORDER.
+data_residency:
+  stripe: IN
